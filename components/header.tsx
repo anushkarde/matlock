@@ -8,10 +8,9 @@ import { cn } from '@/lib/utils'
 import { ThemeToggleButton } from './ThemeToggleButton'
 
 const menuItems = [
-    { name: 'Features', href: '#link' },
-    { name: 'Solution', href: '#link' },
-    { name: 'Pricing', href: '#link' },
-    { name: 'About', href: '#link' },
+    { name: 'Search', href: '#link' },
+    { name: 'Writeup', href: '#link' },
+
 ]
 
 export const HeroHeader = () => {
