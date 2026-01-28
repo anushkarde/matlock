@@ -33,10 +33,6 @@ export type SearchResults = {
   whyFits: string[]
 }
 
-function sleep(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms))
-}
-
 function mock403Results(form: SearchForm): SearchResults {
   const primary: CaseResult = {
     id: "ca9-2018-graphic-photos",
@@ -205,13 +201,37 @@ function mockGenericResults(form: SearchForm): SearchResults {
   return { bestFit: primary, cases: [primary, backup1, backup2], whyFits }
 }
 
-// Replace stub search with CourtListener later.
+// call my own Next.js API route
 export async function searchCases(form: SearchForm): Promise<SearchResults> {
-  await sleep(650)
+  try {
+    const res = await fetch("/api/cases/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
+    })
 
-  const rule = form.rule.toLowerCase()
-  if (rule.includes("403")) return mock403Results(form)
+    if (!res.ok) {
+      // eslint-disable-next-line no-console
+      console.error("[searchCases] API returned", res.status)
+      throw new Error("Search API failed")
+    }
 
-  return mockGenericResults(form)
+    const data = (await res.json()) as SearchResults
+    return data
+  } catch (err) {
+    if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "[searchCases] Falling back to local mock search due to error:",
+        err
+      )
+    }
+
+    const rule = form.rule.toLowerCase()
+    if (rule.includes("403")) return mock403Results(form)
+    return mockGenericResults(form)
+  }
 }
 
