@@ -9,7 +9,16 @@ export default function WriteupPage() {
     <>
       <HeroHeader />
       <main className="min-h-[100svh] px-6 py-14 sm:py-20">
-        <div className="mx-auto w-full max-w-5xl">
+        <div className="relative mx-auto w-full max-w-5xl">
+          {/* Subtle hero backdrop (static; no moving parts) */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 -top-10 -z-10 mx-auto h-72 max-w-5xl"
+          >
+            <div className="absolute inset-0 [background-image:linear-gradient(to_bottom,transparent_98%,theme(colors.border/60)_98%),linear-gradient(to_right,transparent_94%,_theme(colors.border/60)_94%)] [background-size:16px_34px] [mask:radial-gradient(black,transparent_70%)] opacity-60" />
+            <div className="absolute left-1/2 top-10 h-40 w-2/3 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
+          </div>
+
           <div className="flex flex-col items-center gap-6 sm:gap-8">
             <div className="text-center">
               <h1 className="mt-2 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -34,11 +43,11 @@ export default function WriteupPage() {
                 </p>
                 
                 <p>
-                  Today, litigators uncover that reasoning by opening dozens of PDFs, skimming opinions, and manually stitching arguments together under intense time pressure. This process is slow, error-prone, and disproportionately favors firms with the resources to absorb hours of junior associate labor [STAT: avg. hours spent on evidentiary research per motion / cost per associate hour].
+                  Today, litigators uncover that reasoning by opening dozens of PDFs, skimming opinions, and manually stitching arguments together under intense time pressure. This process is slow, error-prone, and disproportionately favors firms with the resources to absorb hours of junior associate labor.
                 </p>
-                
+
                 <p>
-                In an age of instant information, our justice system still runs on manual search and institutional memory. Matlock changes that—surfacing the reasoning courts actually rely on, and making justice verifiable, transparent, and accessible to all.
+                  In an age of instant information, our justice system still runs on manual search and institutional memory. Matlock changes that—surfacing the reasoning courts actually rely on, and making justice verifiable, transparent, and accessible to all.
                 </p>
               </div>
             </Card>
@@ -49,11 +58,94 @@ export default function WriteupPage() {
                 <p className="leading-relaxed">
                   Litigation teams—associates, clerks, public defenders, and prosecutors—face a persistent last-mile research problem. FRE disputes hinge on how similar facts were treated in similar contexts, not on the rule text itself. Yet most legal research tools are database-driven: they return many documents, not the right paragraph.
                 </p>
-                
+
                 <p className="leading-relaxed">
-                  Under real courtroom constraints—hearings, objections, motions in limine—lawyers need something much more precise: a short quote, a pin cite, and jurisdictionally relevant support they can stand behind. Instead, junior staff spend hours synthesizing cases that senior attorneys rarely have time to fully verify [STAT: frequency of evidentiary objections / prep time before hearings]. The result is slower preparation, inconsistent arguments, and unnecessary cognitive load for disputes that recur across cases.
+                  Under real courtroom constraints—hearings, objections, motions in limine—lawyers need something much more precise: a short quote, a pin cite, and jurisdictionally relevant support they can stand behind. Instead, junior staff spend hours synthesizing cases that senior attorneys rarely have time to fully verify. The result is slower preparation, inconsistent arguments, and unnecessary cognitive load for disputes that recur across cases.
                 </p>
-                
+
+                <div className="rounded-2xl border bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4 sm:p-6">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                    <p className="text-xs font-medium tracking-wide text-primary uppercase">
+                      Research & drafting: time + cost reality
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Illustrative ranges; varies by complexity and jurisdiction
+                    </p>
+                  </div>
+
+                  <div className="mt-4 grid gap-6 md:grid-cols-2">
+                    {/* Hours per motion */}
+                    <div className="rounded-xl border bg-background/80 p-4 shadow-sm">
+                      <p className="text-xs font-semibold text-primary">Hours per motion (typical ranges)</p>
+                      <div className="mt-3 space-y-3">
+                        {[
+                          { label: "Simple / routine", range: "3–8 hrs", pct: 18 },
+                          { label: "Standard motion / brief", range: "10–15 hrs", pct: 32 },
+                          { label: "Common benchmark", range: "15–30 hrs", pct: 55 },
+                          { label: "Complex (e.g., summary judgment)", range: "30–80+ hrs", pct: 90 },
+                        ].map((row) => (
+                          <div key={row.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                            <div className="min-w-0">
+                              <div className="flex items-baseline justify-between gap-3">
+                                <p className="truncate text-sm font-medium text-foreground">{row.label}</p>
+                                <p className="shrink-0 text-xs text-muted-foreground">{row.range}</p>
+                              </div>
+                              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+                                <div
+                                  className="h-full rounded-full bg-primary/70"
+                                  style={{ width: `${row.pct}%` }}
+                                />
+                              </div>
+                            </div>
+                            <p className="text-xs font-semibold text-primary tabular-nums">{row.pct}%</p>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        Rule of thumb: ~1 hour per page (includes research + review).
+                      </p>
+                    </div>
+
+                    {/* Cost + review load */}
+                    <div className="rounded-xl border bg-background/80 p-4 shadow-sm">
+                      <p className="text-xs font-semibold text-primary">Cost + evidence review load</p>
+
+                      <div className="mt-3 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+                        <p className="text-sm font-medium text-foreground">Associate hourly rate (US)</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Avg <span className="font-semibold text-primary">$370/hr</span> · Range{" "}
+                          <span className="font-semibold text-primary">$150–$550+</span>
+                        </p>
+                        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+                          <div className="h-full w-full bg-gradient-to-r from-primary/30 via-primary/60 to-primary/30" />
+                        </div>
+                        <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+                          <span>$150</span>
+                          <span>$370</span>
+                          <span>$550+</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 space-y-3">
+                        {[
+                          { label: "Spend 60+ hours on evidence review (per case)", value: "34%", pct: 34 },
+                          { label: "Spend 200+ hours on evidence review (per case)", value: "7%", pct: 7 },
+                        ].map((row) => (
+                          <div key={row.label}>
+                            <div className="flex items-baseline justify-between gap-3">
+                              <p className="text-sm font-medium text-foreground">{row.label}</p>
+                              <p className="text-xs font-semibold text-primary tabular-nums">{row.value}</p>
+                            </div>
+                            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+                              <div className="h-full rounded-full bg-primary/70" style={{ width: `${row.pct}%` }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <p className="leading-relaxed">
                   What litigators actually need is fact-pattern–driven retrieval, objection-ready outputs, and speed in live or near-live contexts. Incumbent products—Westlaw, LexisNexis, CourtListener—optimize for completeness and recall, not semantic similarity, excerpt extraction, or compression into a usable unit of argument.
                 </p>
@@ -239,6 +331,16 @@ export default function WriteupPage() {
                   moment it matters most.
               </p>
             </Card>
+
+            <div className="pt-10 sm:pt-14">
+              <p className="mx-auto max-w-3xl text-balance text-sm italic leading-relaxed text-muted-foreground">
+                I named this <span className="font-medium text-foreground">Matlock</span> because, in fourth grade,
+                my grandfather and I used watch reruns of the show starring Ben Matlock (not the 2024 remake). I
+                don’t remember much about the character himself, but I remember the feeling: sitting on my
+                grandfather&apos;s lap, knowing full well Matlock could never fail, and yet with no idea how he
+                could possibly win <span className="italic">this one too</span>.
+              </p>
+            </div>
           </div>
         </div>
       </main>

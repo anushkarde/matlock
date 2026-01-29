@@ -40,10 +40,19 @@ export default function Home() {
     <>
       <HeroHeader />
       <main className="min-h-[100svh] px-6 py-14 sm:py-20">
-        <div className="mx-auto w-full max-w-5xl">
+        <div className="relative mx-auto w-full max-w-5xl">
+          {/* Subtle hero backdrop (static) */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 -top-10 -z-10 mx-auto h-72 max-w-5xl"
+          >
+            <div className="absolute inset-0 [background-image:linear-gradient(to_bottom,transparent_98%,theme(colors.border/60)_98%),linear-gradient(to_right,transparent_94%,_theme(colors.border/60)_94%)] [background-size:16px_34px] [mask:radial-gradient(black,transparent_70%)] opacity-60" />
+            <div className="absolute left-1/2 top-10 h-40 w-2/3 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
+          </div>
+
           <div className="flex flex-col items-center gap-6 sm:gap-8">
             <div className="text-center">
-              <h1 className="mt-2 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h1 className="mt-12 sm:mt-16 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
                 Find the best cases for your evidence motion
               </h1>
               <p className="text-muted-foreground mt-3 max-w-2xl text-balance text-sm sm:text-base">
@@ -67,6 +76,15 @@ export default function Home() {
               loading={loading}
               onSearch={onSearch}
             />
+            <div className="mt-4 flex justify-center">
+              <div className="flex w-fit items-center gap-2 rounded-full border bg-background/70 px-3 py-1 text-xs text-muted-foreground shadow-sm backdrop-blur">
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
+                  Search
+                </span>
+                <span className="h-4 w-px bg-border" />
+                <span>Rule + facts + jurisdiction → objection-ready authority</span>
+              </div>
+            </div>
           </div>
 
           {results ? (

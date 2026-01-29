@@ -9,6 +9,7 @@ import { ThemeToggleButton } from './ThemeToggleButton'
 
 const menuItems = [
     { name: 'Search', href: '/' },
+    { name: 'Samples', href: '/prompts' },
     { name: 'Writeup', href: '/writeup' },
 
 ]
