@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils'
 import { ThemeToggleButton } from './ThemeToggleButton'
 
 const menuItems = [
-    { name: 'Search', href: '#link' },
-    { name: 'Writeup', href: '#link' },
+    { name: 'Search', href: '/' },
+    { name: 'Writeup', href: '/writeup' },
 
 ]
 
