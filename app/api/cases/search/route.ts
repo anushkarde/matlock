@@ -1,3 +1,5 @@
+export const runtime = "nodejs"
+
 import { NextResponse } from "next/server"
 import { runSearchPipeline } from "@/lib/searchPipeline"
 import type { SearchForm } from "@/lib/searchCases"
