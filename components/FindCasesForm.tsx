@@ -4,8 +4,6 @@ import * as React from "react"
 
 import type { SearchForm } from "@/lib/searchCases"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -32,7 +30,13 @@ const COURT_OPTIONS = [
   { value: "nysd", label: "S.D.N.Y." },
 ] as const
 
-const TIME_WINDOWS = [3, 5, 10, 15, 20] as const
+const TIME_WINDOWS = [
+  { value: 1000, label: "Any" },
+  { value: 10, label: "Last 10 years" },
+  { value: 5, label: "Last 5 years" },
+  { value: 3, label: "Last 3 years" },
+  { value: 20, label: "Last 20 years" },
+] as const
 
 type FormErrors = Partial<Record<keyof SearchForm, string>>
 
@@ -73,26 +77,59 @@ export function FindCasesForm({
     await onSearch(form)
   }
 
+  function onFactKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      void onSubmit(e as unknown as React.FormEvent)
+    }
+  }
+
   return (
-    <section className="mt-8" aria-label="Find cases form">
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl sm:text-2xl">Evidence Motion Helper</CardTitle>
-          <div className="text-muted-foreground text-sm">
-            Describe your evidence issue, then get the best-fit case + backup authorities.
+    <section className="mt-10" aria-label="Find cases">
+      <form onSubmit={onSubmit} className="space-y-6">
+        <div className="mx-auto w-full max-w-3xl rounded-2xl border bg-background/60 p-4 shadow-sm backdrop-blur sm:p-6">
+          <div className="flex items-center justify-center">
+            <div className="rounded-full border bg-background/70 px-3 py-1 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">Matlock</span>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="rule">Rule</Label>
-                <Select
-                  value={form.rule}
-                  onValueChange={(v) => setForm((f) => ({ ...f, rule: v }))}
-                >
-                  <SelectTrigger id="rule" className="h-10">
-                    <SelectValue placeholder="Select a rule" />
+
+          <div className="mt-4">
+            <Textarea
+              id="factPattern"
+              value={form.factPattern}
+              onChange={(e) => setForm((f) => ({ ...f, factPattern: e.target.value }))}
+              onKeyDown={onFactKeyDown}
+              placeholder="Describe the evidence issue…"
+              className="min-h-[140px] rounded-2xl border-border/70 bg-background/80 px-5 py-4 text-base leading-relaxed shadow-none focus-visible:ring-ring/40 focus-visible:ring-[3px] sm:min-h-[160px] sm:text-lg"
+            />
+
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <p className="text-muted-foreground text-xs">
+                Tip: include what the other side will argue.{" "}
+                <span className="hidden sm:inline">Cmd/Ctrl+Enter to search.</span>
+              </p>
+              <Button type="submit" className="h-10 rounded-xl px-5" disabled={loading}>
+                {loading ? "Searching…" : "Search"}
+              </Button>
+            </div>
+
+            {errors.factPattern ? (
+              <div className="text-destructive mt-2 text-xs">{errors.factPattern}</div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mx-auto w-full max-w-3xl">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border bg-background/60 p-4 shadow-sm backdrop-blur">
+              <Label htmlFor="rule" className="text-muted-foreground text-xs">
+                Rule
+              </Label>
+              <div className="mt-2">
+                <Select value={form.rule} onValueChange={(v) => setForm((f) => ({ ...f, rule: v }))}>
+                  <SelectTrigger id="rule" className="h-11 rounded-xl border-border/70 bg-background/80">
+                    <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
                     {RULE_OPTIONS.map((opt) => (
@@ -102,19 +139,18 @@ export function FindCasesForm({
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.rule ? (
-                  <div className="text-destructive text-xs">{errors.rule}</div>
-                ) : null}
+                {errors.rule ? <div className="text-destructive mt-2 text-xs">{errors.rule}</div> : null}
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="courtId">Jurisdiction</Label>
-                <Select
-                  value={form.courtId}
-                  onValueChange={(v) => setForm((f) => ({ ...f, courtId: v }))}
-                >
-                  <SelectTrigger id="courtId" className="h-10">
-                    <SelectValue placeholder="Select a court" />
+            <div className="rounded-2xl border bg-background/60 p-4 shadow-sm backdrop-blur">
+              <Label htmlFor="courtId" className="text-muted-foreground text-xs">
+                Jurisdiction
+              </Label>
+              <div className="mt-2">
+                <Select value={form.courtId} onValueChange={(v) => setForm((f) => ({ ...f, courtId: v }))}>
+                  <SelectTrigger id="courtId" className="h-11 rounded-xl border-border/70 bg-background/80">
+                    <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
                     {COURT_OPTIONS.map((opt) => (
@@ -124,129 +160,61 @@ export function FindCasesForm({
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.courtId ? (
-                  <div className="text-destructive text-xs">{errors.courtId}</div>
-                ) : null}
+                {errors.courtId ? <div className="text-destructive mt-2 text-xs">{errors.courtId}</div> : null}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="factPattern">Fact pattern</Label>
-              <Textarea
-                id="factPattern"
-                value={form.factPattern}
-                onChange={(e) => setForm((f) => ({ ...f, factPattern: e.target.value }))}
-                placeholder="2–8 sentences. What’s the evidence, what’s disputed, and why is it prejudicial / unreliable / confusing?"
-              />
-              <div className="text-muted-foreground text-xs">
-                Tip: include what the other side will argue, and whether you offered a stipulation.
+            <div className="rounded-2xl border bg-background/60 p-4 shadow-sm backdrop-blur">
+              <Label htmlFor="timeWindowYears" className="text-muted-foreground text-xs">
+                Time Window
+              </Label>
+              <div className="mt-2">
+                <Select
+                  value={String(form.timeWindowYears)}
+                  onValueChange={(v) => setForm((f) => ({ ...f, timeWindowYears: Number(v) }))}
+                >
+                  <SelectTrigger id="timeWindowYears" className="h-11 rounded-xl border-border/70 bg-background/80">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_WINDOWS.map((opt) => (
+                      <SelectItem key={opt.value} value={String(opt.value)}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              {errors.factPattern ? (
-                <div className="text-destructive text-xs">{errors.factPattern}</div>
-              ) : null}
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <div className="text-sm font-medium">Prefer binding authority</div>
-                    <div className="text-muted-foreground text-xs">
-                      Prioritize cases that bind your court.
-                    </div>
-                  </div>
+            <div className="rounded-2xl border bg-background/60 p-4 shadow-sm backdrop-blur">
+              <p className="text-muted-foreground text-xs">Include</p>
+              <div className="mt-3 space-y-3">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/80 px-3 py-2">
+                  <p className="text-sm font-medium text-foreground">Prefer precedential</p>
                   <Switch
                     checked={form.preferBinding}
-                    onCheckedChange={(checked) =>
-                      setForm((f) => ({ ...f, preferBinding: checked }))
-                    }
+                    onCheckedChange={(checked) => setForm((f) => ({ ...f, preferBinding: checked }))}
                   />
                 </div>
-
-                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <div className="text-sm font-medium">Include persuasive cases</div>
-                    <div className="text-muted-foreground text-xs">
-                      Add helpful non-binding authorities.
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/80 px-3 py-2">
+                  <p className="text-sm font-medium text-foreground">Include persuasive</p>
                   <Switch
                     checked={form.includePersuasive}
-                    onCheckedChange={(checked) =>
-                      setForm((f) => ({ ...f, includePersuasive: checked }))
-                    }
+                    onCheckedChange={(checked) => setForm((f) => ({ ...f, includePersuasive: checked }))}
                   />
                 </div>
               </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <div className="text-sm font-medium">Show only published opinions</div>
-                    <div className="text-muted-foreground text-xs">
-                      Exclude unpublished dispositions when possible.
-                    </div>
-                  </div>
-                  <Switch
-                    checked={form.onlyPublished}
-                    onCheckedChange={(checked) =>
-                      setForm((f) => ({ ...f, onlyPublished: checked }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2 rounded-lg border p-3">
-                  <Label className="text-sm font-medium" htmlFor="timeWindowYears">
-                    Time window (last N years)
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={String(form.timeWindowYears)}
-                      onValueChange={(v) =>
-                        setForm((f) => ({ ...f, timeWindowYears: Number(v) }))
-                      }
-                    >
-                      <SelectTrigger id="timeWindowYears" className="h-10">
-                        <SelectValue placeholder="Select years" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TIME_WINDOWS.map((n) => (
-                          <SelectItem key={n} value={String(n)}>
-                            {n}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <div className="flex-1">
-                      <Input
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={String(form.timeWindowYears)}
-                        onChange={(e) => {
-                          const next = Number(e.target.value || 0)
-                          setForm((f) => ({ ...f, timeWindowYears: Number.isFinite(next) ? next : f.timeWindowYears }))
-                        }}
-                        className="h-10"
-                        aria-label="Time window years"
-                      />
-                    </div>
-                  </div>
-                  <div className="text-muted-foreground text-xs">
-                    Default is 10 years.
-                  </div>
-                </div>
-              </div>
             </div>
+          </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-              <Button type="submit" className="h-10 w-full sm:w-auto" disabled={loading}>
-                {loading ? "Searching…" : "Find best cases"}
-              </Button>
+          <div className="mt-3 flex justify-center">
+            <div className="rounded-full border bg-background/70 px-3 py-1 text-[11px] text-muted-foreground shadow-sm backdrop-blur">
+              Rule + facts → the paragraph courts cite
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      </form>
     </section>
   )
 }

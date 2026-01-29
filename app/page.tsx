@@ -5,6 +5,7 @@ import * as React from "react"
 import { HeroHeader } from "@/components/header"
 import { FindCasesForm } from "@/components/FindCasesForm"
 import { ResultsPanel } from "@/components/ResultsPanel"
+import { TypewriterHeadline } from "@/components/TypewriterHeadline"
 import type { SearchForm, SearchResults } from "@/lib/searchCases"
 import { searchCases } from "@/lib/searchCases"
 
@@ -53,11 +54,14 @@ export default function Home() {
           <div className="flex flex-col items-center gap-6 sm:gap-8">
             <div className="text-center">
               <h1 className="mt-12 sm:mt-16 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-                Find the best cases for your evidence motion
+                <TypewriterHeadline
+                  phrases={[
+                    "Find the best cases for your evidence motion",
+                    "Get objection-ready quotes in seconds",
+                    "Rule + facts → the paragraph courts cite",
+                  ]}
+                />
               </h1>
-              <p className="text-muted-foreground mt-3 max-w-2xl text-balance text-sm sm:text-base">
-                Start with the rule + jurisdiction and a short fact pattern. We’ll generate a best-fit case plus two backups with quotable snippets.
-              </p>
             </div>
           </div>
 
@@ -76,15 +80,6 @@ export default function Home() {
               loading={loading}
               onSearch={onSearch}
             />
-            <div className="mt-4 flex justify-center">
-              <div className="flex w-fit items-center gap-2 rounded-full border bg-background/70 px-3 py-1 text-xs text-muted-foreground shadow-sm backdrop-blur">
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
-                  Search
-                </span>
-                <span className="h-4 w-px bg-border" />
-                <span>Rule + facts + jurisdiction → objection-ready authority</span>
-              </div>
-            </div>
           </div>
 
           {results ? (
