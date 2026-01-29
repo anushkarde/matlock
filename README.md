@@ -1,3 +1,16 @@
+## Prerequisites
+
+This project requires API keys for:
+
+- Exa Search API
+- CourtListener API
+
+Create a `.env.local` file in the project root with:
+
+```bash
+EXA_API_KEY=your_exa_key_here
+COURTLISTENER_API_KEY=your_courtlistener_key_here
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
