@@ -118,7 +118,23 @@ type JustiaContext = {
 // Exa Contents pulls raw HTML content which includes site navigation elements
 // This function strips those out so we only show actual legal text
 function cleanExtractedText(raw: string): string {
-  const lines = raw
+  // First, remove CourtListener-specific navigation patterns inline (before splitting)
+  // These patterns appear within the text itself, not as separate lines
+  let cleaned = raw
+    // Remove CourtListener navigation sections like "### Your Notes( edit ) (none) ### Summaries (9)"
+    .replace(/###\s*Your Notes\s*\(?\s*edit\s*\)?\s*\(?\s*none\s*\)?\s*###\s*Summaries\s*\(\d+\)/gi, "")
+    // Remove standalone "### Your Notes" sections
+    .replace(/###\s*Your Notes[^#]*/gi, "")
+    // Remove standalone "### Summaries" sections
+    .replace(/###\s*Summaries\s*\(\d+\)/gi, "")
+    // Remove "( edit )" patterns
+    .replace(/\(\s*edit\s*\)/gi, "")
+    // Remove "(none)" patterns
+    .replace(/\(\s*none\s*\)/gi, "")
+    // Remove standalone "###" headers that are likely navigation
+    .replace(/###\s*[A-Z][^#]*$/gm, "")
+
+  const lines = cleaned
     .split("\n")
     .map((l) => l.trim())
     .filter(Boolean) // Remove empty lines
@@ -131,6 +147,10 @@ function cleanExtractedText(raw: string): string {
     /cornell law school/i,
     /legal information institute/i,
     /^\[[^\]]+\]$/, // standalone bracketed nav labels like [Search Cornell]
+    /^###\s*Your Notes/i,
+    /^###\s*Summaries/i,
+    /^\s*\(?\s*edit\s*\)?\s*$/i,
+    /^\s*\(?\s*none\s*\)?\s*$/i,
   ]
 
   const kept = lines.filter(
@@ -142,9 +162,7 @@ function cleanExtractedText(raw: string): string {
 }
 
 // Extract snippets using Exa's highlights feature directly
-// This replaces the old paragraph extraction/scoring approach with Exa's semantic highlighting
-// Extract snippets using Exa's highlights feature directly
-// This replaces the old paragraph extraction/scoring approach with Exa's semantic highlighting
+
 async function buildSnippetsForCase(
   candidate: CandidateCase,
   form: SearchForm,
@@ -169,28 +187,51 @@ async function buildSnippetsForCase(
   })
 
   const doc = contents?.[0]
-  const hs: string[] = doc?.highlights ?? []
+  
+  // Clean highlights: remove code blocks, navigation cruft, normalize whitespace, filter out tiny snippets
+  const hs = (doc?.highlights ?? [])
+    .map((h) => {
+      // First remove code blocks
+      let cleaned = h.replace(/```/g, "")
+      // Apply comprehensive text cleaning to remove navigation/UI elements
+      cleaned = cleanExtractedText(cleaned)
+      // Normalize whitespace and trim
+      return cleaned.replace(/\s+/g, " ").trim()
+    })
+    .filter((h) => h.length >= 40) // Drop tiny/empty junk
 
-  // Clean and truncate highlights
-  const cleaned = hs
-    .map((h) => h.replace(/\s+/g, " ").trim()) // Normalize whitespace
-    .filter((h) => h.length > 0) // Remove empty highlights
-    .map((h) => (h.length > 420 ? h.slice(0, 420).trim() + "…" : h)) // Hard cap at 420 chars
+  // Fallback to summaryText if no highlights extracted
+  if (!hs.length) {
+    let fallback = candidate.summaryText ?? ""
+    // Remove code blocks
+    fallback = fallback.replace(/```/g, "")
+    // Apply comprehensive text cleaning
+    fallback = cleanExtractedText(fallback)
+    // Normalize whitespace and trim
+    fallback = fallback.replace(/\s+/g, " ").trim()
 
-  // Fallback if no highlights extracted
-  if (!cleaned.length) {
+    if (fallback.length >= 40) {
+      return [
+        {
+          label: "Key excerpt",
+          text: fallback.slice(0, 280) + "…",
+          highlight: fallback.slice(0, 280) + "…",
+        },
+      ]
+    }
+
     return [
       {
         label: "Key excerpt",
-        text: "Unable to extract a targeted excerpt from this opinion. Open the opinion to review.",
+        text: "No excerpt available for this opinion.",
       },
     ]
   }
 
   // Assign labels to highlights (up to 3)
-  const labels = ["Application", "Reasoning", "Limiting principle"]
-  return cleaned.slice(0, 3).map((h, i) => ({
-    label: labels[i] ?? "Key excerpt",
+  // All are labeled as "Relevant excerpt" since we're not semantically distinguishing them
+  return hs.slice(0, 3).map((h) => ({
+    label: "Relevant excerpt",
     text: h, // The highlight itself is the snippet text
     highlight: h, // Also use as the highlight (entire snippet is highlighted)
   }))
@@ -244,30 +285,28 @@ function buildWhyFits(
 
   bullets.push(summary)
 
-  // Add a sentence that uses the highlighted snippets from the case itself.
-  const testSnippet = best.snippets.find(
-    (s) => s.label === "The test"
-  )
-  const applicationSnippet = best.snippets.find(
-    (s) => s.label === "Why excluded/admitted"
-  )
-  const limitingSnippet = best.snippets.find(
-    (s) => s.label === "Limiting principle"
-  )
+  // Build explanation from the case snippets
+  // Use all relevant excerpts to build a cohesive explanation
+  const uniqueSnippets = best.snippets
+    .map((s) => s.text)
+    .filter((text, index, arr) => arr.indexOf(text) === index) // Remove duplicates
 
-  const secondParts: string[] = []
-  if (testSnippet?.highlight) {
-    secondParts.push(`It articulates the governing test as: “${testSnippet.highlight}”`)
-  }
-  if (applicationSnippet?.highlight) {
-    secondParts.push(`On similar facts, the court explains: “${applicationSnippet.highlight}”`)
-  }
-  if (limitingSnippet?.highlight) {
-    secondParts.push(`It also offers a limiting principle: “${limitingSnippet.highlight}”`)
+  const snippetParts: string[] = []
+  if (uniqueSnippets.length > 0) {
+    // Use the first snippet as the main application/reasoning
+    snippetParts.push(`The court's application: "${uniqueSnippets[0]}"`)
+    
+    // Add additional snippets if available
+    if (uniqueSnippets.length > 1) {
+      snippetParts.push(`Its reasoning: "${uniqueSnippets[1]}"`)
+    }
+    if (uniqueSnippets.length > 2) {
+      snippetParts.push(`A limiting principle: "${uniqueSnippets[2]}"`)
+    }
   }
 
-  if (secondParts.length > 0) {
-    bullets.push(secondParts.join(" "))
+  if (snippetParts.length > 0) {
+    bullets.push(snippetParts.join(" "))
   }
 
   // Add Justia-derived common patterns if available and meaningful.
@@ -384,7 +423,7 @@ async function exaMultiDomainSearch(
   // These are the PRIMARY cases that will be shown to the user
   // Order matters: Exa has already ranked them semantically, so we preserve that order
   const courtlistenerCandidates: CandidateCase[] = (exaCourtlistener ?? [])
-    .filter((r) => r.url && r.title) // Only keep results with both URL and title
+    .filter((r) => r.url && r.title && r.url.includes("/opinion/")) // Only keep opinion URLs with titles
     .map((r) => {
       // Try to extract year from highlights, title, or fallback to current year
       // Since text: false, we use highlights array if available
@@ -422,38 +461,18 @@ async function exaMultiDomainSearch(
   const justiaContext: JustiaContext | null =
     phrases.length > 0 ? { phrases } : null
 
-  // Build rule explainer from Cornell result
-  // Exa Search gives us the Cornell URL, but we need Exa Contents to get the full text
+  // Build rule explainer from Cornell result using highlights from search (not Contents)
+  // This keeps it concise (2 sentences) instead of a full text dump
   let ruleExplainer: RuleExplainer | null = null
-  if (exaCornell && exaCornell.length > 0 && exaCornell[0]?.url) {
-    try {
-      const cornellUrl = exaCornell[0].url
-      // Fetch full text of the Cornell rule page via Exa Contents
-      const contents = await exaContents({ urls: [cornellUrl] })
-      const fullText = contents[0]?.text ?? ""
+  if (exaCornell && exaCornell.length > 0) {
+    const title = exaCornell[0].title ?? `${form.rule} - Federal Rules of Evidence`
+    const text =
+      (exaCornell[0].highlights?.join(" ") ?? "")
+        .replace(/\s+/g, " ")
+        .trim()
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e39f9e2e-6124-4643-892e-c2aec1dcf2e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/searchPipeline.ts:exaMultiDomainSearch',message:'exaCornell contents',data:{url:cornellUrl,hasContents:!!contents?.[0],textLength:fullText.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
-      // #endregion
-
-      // Clean navigation/ads from the extracted text
-      const cleaned = cleanExtractedText(fullText)
-
-      if (cleaned.length > 0) {
-        const title =
-          exaCornell[0].title ?? `${form.rule} - Federal Rules of Evidence`
-        // Remove title if it appears verbatim in the body to avoid duplication
-        const body =
-          cleaned.replace(title, "").trim() || cleaned
-
-        ruleExplainer = {
-          title,
-          text: body.slice(0, 800).trim(), // Truncate to 800 chars for UI card
-        }
-      }
-    } catch {
-      // If Cornell fetch fails, just leave ruleExplainer null (non-fatal)
-      // ignore Cornell failures and leave ruleExplainer null
+    if (text) {
+      ruleExplainer = { title, text }
     }
   }
 
