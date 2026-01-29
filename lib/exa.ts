@@ -3,6 +3,8 @@ const EXA_BASE_URL = "https://api.exa.ai"
 const EXA_API_KEY = process.env.EXA_API_KEY
 // eslint-disable-next-line no-console
 console.log("[exa] has key on this deployment?", !!process.env.EXA_API_KEY)
+// eslint-disable-next-line no-console
+console.log("[exa] EXA_API_KEY raw value prefix:", String(process.env.EXA_API_KEY ?? "").slice(0, 5))
 
 if (!EXA_API_KEY && process.env.NODE_ENV === "development") {
   // eslint-disable-next-line no-console
