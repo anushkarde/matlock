@@ -12,7 +12,6 @@ import {
 
 export type SearchDebug = {
   courtlistenerCount: number
-  exaJustiaCount: number
   mergedCount: number
 }
 
@@ -23,7 +22,7 @@ type CandidateCase = {
   courtLabel: string
   year: number
   url: string
-  source: "courtlistener" | "justia"
+  source: "courtlistener-exa"
   summaryText?: string
 }
 
@@ -90,61 +89,8 @@ function issueTagsFrom(
   return Array.from(tags)
 }
 
-function scoreCandidate(
-  candidate: CandidateCase,
-  form: SearchForm,
-  normalizedRule: string
-): number {
-  let score = 0
-  const text = `${candidate.name} ${candidate.summaryText ?? ""}`.toLowerCase()
-  const fact = form.factPattern.toLowerCase()
-
-  if (text.includes(normalizedRule)) score += 3
-  if (text.includes("federal rules of evidence")) score += 1
-
-  if (candidate.courtId === form.courtId) score += 4
-
-  if (
-    form.preferBinding &&
-    candidate.courtId === form.courtId
-  ) {
-    score += 2
-  }
-
-  const age = new Date().getFullYear() - candidate.year
-  const withinWindow = age <= form.timeWindowYears
-  if (withinWindow) {
-    score += 2
-    score += Math.max(0, 3 - age / Math.max(1, form.timeWindowYears / 3))
-  } else {
-    score -= 1
-  }
-
-  if (
-    form.onlyPublished &&
-    candidate.source === "courtlistener"
-  ) {
-    score += 1
-  }
-
-  const keywordPairs = [
-    ["graphic", 2],
-    ["photo", 2],
-    ["stipulation", 2],
-    ["probative", 2],
-    ["unfair prejudice", 3],
-    ["substantially outweighed", 3],
-    ["daubert", 3],
-    ["hearsay", 2],
-  ] as const
-
-  for (const [kw, w] of keywordPairs) {
-    if (text.includes(kw) && fact.includes(kw)) {
-      score += w
-    }
-  }
-
-  return score
+type JustiaContext = {
+  phrases: string[]
 }
 
 function splitParagraphs(text: string): string[] {
@@ -279,7 +225,8 @@ async function buildSnippetsForCase(
 function buildWhyFits(
   best: CaseResult,
   form: SearchForm,
-  normalizedRule: string
+  normalizedRule: string,
+  justiaContext?: JustiaContext | null
 ): string[] {
   const bullets: string[] = []
   const factLower = form.factPattern.toLowerCase()
@@ -304,6 +251,12 @@ function buildWhyFits(
     "Provides quotable language that can be adapted directly into your motion."
   )
 
+  if (justiaContext && justiaContext.phrases.length > 0) {
+    bullets.push(
+      `Courts commonly emphasize: ${justiaContext.phrases[0]}`
+    )
+  }
+
   return bullets.slice(0, 4)
 }
 
@@ -323,85 +276,80 @@ function parseYearFromString(s: string): number | null {
   return Number(m[0])
 }
 
-async function buildCandidates(
-  form: SearchForm,
-  normalizedRule: string
-): Promise<{ candidates: CandidateCase[]; debug: SearchDebug }> {
-  const dateMin = isoDateYearsAgo(form.timeWindowYears)
+async function exaMultiDomainSearch(
+  form: SearchForm
+): Promise<{
+  courtlistenerCandidates: CandidateCase[]
+  justiaContext: JustiaContext | null
+}> {
+  const baseQuery = `Find judicial opinions applying ${form.rule} to this fact pattern: ${form.factPattern}. Focus on evidentiary admissibility, motions in limine, and judicial reasoning.`
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e39f9e2e-6124-4643-892e-c2aec1dcf2e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/searchPipeline.ts:buildCandidates',message:'buildCandidates start',data:{rule:form.rule,courtId:form.courtId,dateMin,onlyPublished:form.onlyPublished,timeWindowYears:form.timeWindowYears},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
-  // #endregion
-
-  const courtlistenerQuery = `${form.rule} evidence (${form.factPattern.slice(
-    0,
-    120
-  )})`
-
-  const [cl, exaCornell, exaJustia] = await Promise.all([
-    searchOpinions({
-      query: courtlistenerQuery,
-      courtId: form.courtId,
-      dateMinIso: dateMin,
-      onlyPublished: form.onlyPublished,
-      pageSize: 25,
-    }),
+  const [exaCourtlistener, exaJustia] = await Promise.all([
     exaSearch({
-      query: `${form.rule} Federal Rules of Evidence site:law.cornell.edu`,
-      includeDomains: ["law.cornell.edu"],
-      numResults: 2,
+      query: baseQuery,
+      includeDomains: ["courtlistener.com"],
+      numResults: 7,
       text: true,
     }),
     exaSearch({
-      query: `${form.rule} evidence motion ${form.factPattern}`,
+      query: `How courts interpret ${form.rule} in similar evidentiary fact patterns, focusing on the structure of the test and reasons to exclude or admit evidence.`,
       includeDomains: ["justia.com"],
-      numResults: 8,
+      numResults: 3,
       text: true,
     }),
   ])
 
-  const clCandidates: CandidateCase[] = (cl ?? []).map(
-    (op: CourtlistenerOpinion) => {
-      const name = normalizeCaseName(op.caseName)
-      const url = `${"https://www.courtlistener.com"}${op.absolute_url}`
-      const year = parseYearFromDate(op.dateFiled) ?? new Date().getFullYear()
-      return {
-        id: `cl-${op.id}`,
-        name,
-        courtId: op.court,
-        courtLabel: op.court ?? "",
-        year,
-        url,
-        source: "courtlistener",
-        summaryText: "",
-      }
-    }
-  )
+  const nowYear = new Date().getFullYear()
 
-  const justiaCandidates: CandidateCase[] = (exaJustia ?? [])
+  const courtlistenerCandidates: CandidateCase[] = (exaCourtlistener ?? [])
     .filter((r) => r.url && r.title)
     .map((r) => {
       const year =
-        parseYearFromString(r.title ?? "") ??
         parseYearFromString(r.text ?? "") ??
-        new Date().getFullYear()
+        parseYearFromString(r.title ?? "") ??
+        nowYear
+
       return {
-        id: `exa-${r.id}`,
+        id: `exa-cl-${r.id}`,
         name: normalizeCaseName(r.title),
         courtId: undefined,
-        courtLabel: "Justia",
+        courtLabel: "CourtListener",
         year,
         url: r.url,
-        source: "justia",
+        source: "courtlistener-exa",
         summaryText: r.text,
       }
     })
 
-  const key = (c: CandidateCase) =>
-    `${c.name.toLowerCase()}|${c.year}|${c.courtLabel.toLowerCase()}`
+  const phrases: string[] = []
+  for (const r of exaJustia ?? []) {
+    if (!r.text) continue
+    const firstSentence = r.text.split(/(?<=[\.\?\!])\s+/g)[0]?.trim()
+    if (firstSentence && firstSentence.length > 40) {
+      phrases.push(firstSentence)
+    }
+  }
+
+  const justiaContext: JustiaContext | null =
+    phrases.length > 0 ? { phrases } : null
+
+  return { courtlistenerCandidates, justiaContext }
+}
+
+async function buildCandidates(
+  form: SearchForm,
+  normalizedRule: string
+): Promise<{ candidates: CandidateCase[]; debug: SearchDebug; justiaContext: JustiaContext | null }> {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e39f9e2e-6124-4643-892e-c2aec1dcf2e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/searchPipeline.ts:buildCandidates',message:'buildCandidates start',data:{rule:form.rule,courtId:form.courtId,timeWindowYears:form.timeWindowYears},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
+  // #endregion
+
+  const { courtlistenerCandidates, justiaContext } = await exaMultiDomainSearch(form)
+
+  const key = (c: CandidateCase) => c.url.toLowerCase()
 
   const mergedMap = new Map<string, CandidateCase>()
-  for (const c of [...clCandidates, ...justiaCandidates]) {
+  for (const c of courtlistenerCandidates) {
     const k = key(c)
     if (!mergedMap.has(k)) mergedMap.set(k, c)
   }
@@ -409,16 +357,16 @@ async function buildCandidates(
   const merged = Array.from(mergedMap.values())
 
   // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e39f9e2e-6124-4643-892e-c2aec1dcf2e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/searchPipeline.ts:buildCandidates',message:'buildCandidates counts',data:{courtlistenerCount:clCandidates.length,exaCornellCount:(exaCornell??[]).length,exaJustiaCount:justiaCandidates.length,mergedCount:merged.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
+  fetch('http://127.0.0.1:7242/ingest/e39f9e2e-6124-4643-892e-c2aec1dcf2e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/searchPipeline.ts:buildCandidates',message:'buildCandidates counts',data:{courtlistenerCount:courtlistenerCandidates.length,mergedCount:merged.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
   // #endregion
 
   return {
     candidates: merged,
     debug: {
-      courtlistenerCount: clCandidates.length,
-      exaJustiaCount: justiaCandidates.length,
+      courtlistenerCount: courtlistenerCandidates.length,
       mergedCount: merged.length,
     },
+    justiaContext,
   }
 }
 
@@ -426,8 +374,9 @@ export async function runSearchPipeline(
   form: SearchForm
 ): Promise<SearchResults & { debug?: SearchDebug }> {
   const normalizedRule = normalizeRuleToken(form.rule)
-  const { candidates, debug } = await buildCandidates(form, normalizedRule)
+  const { candidates, debug, justiaContext } = await buildCandidates(form, normalizedRule)
 
+  // fallback to no results if no candidates are found
   if (!candidates.length) {
     const fallback: SearchResults = {
       bestFit: {
@@ -457,31 +406,16 @@ export async function runSearchPipeline(
       debug,
     }
   }
+  const nowYear = new Date().getFullYear()
+  const filtered = candidates.filter((c) => {
+    const age = nowYear - c.year
+    if (Number.isFinite(c.year) && age > form.timeWindowYears) {
+      return false
+    }
+    return true
+  })
 
-  const scored = candidates.map((c) => ({
-    candidate: c,
-    score: scoreCandidate(c, form, normalizedRule),
-  }))
-
-  scored.sort((a, b) => b.score - a.score)
-
-  const binding = scored.filter(
-    (s) => authorityFromMeta(s.candidate, form) === "binding"
-  )
-
-  const ordered: CandidateCase[] = []
-  if (form.preferBinding && binding.length > 0) {
-    ordered.push(binding[0].candidate)
-  }
-
-  for (const { candidate } of scored) {
-    if (ordered.find((c) => c.id === candidate.id)) continue
-    const authority = authorityFromMeta(candidate, form)
-    if (!form.includePersuasive && authority === "persuasive") continue
-    ordered.push(candidate)
-  }
-
-  const top = ordered.slice(0, 3)
+  const top = filtered.slice(0, 3)
 
   const caseResults: CaseResult[] = []
   for (const c of top) {
@@ -502,7 +436,7 @@ export async function runSearchPipeline(
   }
 
   const bestFit = caseResults[0]
-  const whyFits = buildWhyFits(bestFit, form, normalizedRule)
+  const whyFits = buildWhyFits(bestFit, form, normalizedRule, justiaContext)
 
   return {
     bestFit,
