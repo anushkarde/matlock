@@ -29,6 +29,8 @@ const PROMPTS: Prompt[] = [
     rules: ["FRE 403"],
     facts:
       "In a murder trial, the prosecution offers evidence that the defendant had a violent argument with a coworker five years earlier, unrelated to the victim or the charged crime.",
+    expected:
+    "Courts finding the evidence has minimal probative value because it’s remote in time and factually unrelated to the charged crime, strong emphasis on unfair prejudice: risk the jury infers violent character or propensity rather than draws a legitimate inference."
   },
   {
     id: "hearsay-exception",
@@ -74,17 +76,7 @@ const PROMPTS: Prompt[] = [
 ]
 
 function promptToText(p: Prompt) {
-  const lines: string[] = []
-  lines.push(p.title)
-  lines.push("")
-  lines.push(`Rules: ${p.rules.join(", ")}`)
-  lines.push("")
-  lines.push(`Facts: ${p.facts}`)
-  if (p.expected?.trim()) {
-    lines.push("")
-    lines.push(`What you should expect: ${p.expected}`)
-  }
-  return lines.join("\n")
+  return p.facts
 }
 
 export default function PromptsPage() {

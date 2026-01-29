@@ -323,6 +323,27 @@ export default function WriteupPage() {
             </Card>
 
             <Card className="p-6 sm:p-8">
+              <h2 className="text-2xl font-semibold mb-4">Implementation</h2>
+              <div className="space-y-4 text-muted-foreground">
+                <p className="leading-relaxed">
+                  I built Matlock as a thin pipeline on top of Exa’s <span className="font-medium text-foreground">/search</span>{" "}
+                  and <span className="font-medium text-foreground">/contents</span> APIs: search to find the right
+                  cases, then highlights to pull the exact paragraphs courts actually rely on.
+                </p>
+                <p className="leading-relaxed">
+                  The initial corpus comes from CourtListener (primary opinions), Justia (clean mirrors), and
+                  Cornell LII (rule text), with some annoying but necessary text cleanup to make paragraph-level
+                  retrieval behave.
+                </p>
+                <p className="leading-relaxed">
+                  Longer term, this same setup could extend to Websets and firm-internal data, letting lawyers
+                  semantically search their own cached materials before trial—something Exa’s ZDR model makes
+                  especially compelling for sensitive legal data.
+                </p>
+              </div>
+            </Card>
+
+            <Card className="p-6 sm:p-8">
               <p className="text-base sm:text-lg leading-relaxed text-foreground">
                 <span className="font-semibold text-primary">Matlock</span> doesn’t replace legal databases; it
                 compresses them into something usable. This is a domain where finding the{" "}
@@ -331,6 +352,8 @@ export default function WriteupPage() {
                   moment it matters most.
               </p>
             </Card>
+
+            
 
             <div className="pt-10 sm:pt-14">
               <p className="mx-auto max-w-3xl text-balance text-sm italic leading-relaxed text-muted-foreground">
