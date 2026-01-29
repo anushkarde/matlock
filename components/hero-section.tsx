@@ -68,9 +68,6 @@ export default function HeroSection() {
       <div className="mx-auto w-full max-w-4xl">
         <div className="flex flex-col items-center gap-6 sm:gap-8">
         
-          <div className="text-muted-foreground text-center text-xl font-medium tracking-wide">
-            Matlock
-          </div>
 
           <Card className="w-full p-5 sm:p-6">
             <form onSubmit={onSubmit} className="space-y-4 sm:space-y-5">

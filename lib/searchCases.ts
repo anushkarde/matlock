@@ -27,12 +27,19 @@ export type CaseResult = {
   snippets: CaseSnippet[]
 }
 
+export type RuleExplainer = {
+  title: string
+  text: string
+}
+
 export type SearchResults = {
   bestFit: CaseResult
   cases: CaseResult[]
   whyFits: string[]
+  ruleExplainer?: RuleExplainer
 }
 
+// this is called if the API call fails
 function mock403Results(form: SearchForm): SearchResults {
   const primary: CaseResult = {
     id: "ca9-2018-graphic-photos",

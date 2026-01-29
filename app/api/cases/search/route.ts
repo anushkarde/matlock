@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as SearchForm
 
-    // #region agent log
+    // #region agent log -> debug stuff
     fetch('http://127.0.0.1:7242/ingest/e39f9e2e-6124-4643-892e-c2aec1dcf2e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cases/search/route.ts:POST',message:'request received',data:{rule:body?.rule,courtId:body?.courtId,factLen:body?.factPattern?.length,preferBinding:body?.preferBinding,includePersuasive:body?.includePersuasive,onlyPublished:body?.onlyPublished,timeWindowYears:body?.timeWindowYears},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
     // #endregion
 

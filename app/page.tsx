@@ -43,9 +43,6 @@ export default function Home() {
         <div className="mx-auto w-full max-w-5xl">
           <div className="flex flex-col items-center gap-6 sm:gap-8">
             <div className="text-center">
-              <div className="text-muted-foreground text-sm font-medium tracking-wide">
-                Matlock
-              </div>
               <h1 className="mt-2 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
                 Find the best cases for your evidence motion
               </h1>

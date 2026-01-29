@@ -26,6 +26,21 @@ export function ResultsPanel({
         </Button>
       </div>
 
+      {results.ruleExplainer ? (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg">
+              {results.ruleExplainer.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {results.ruleExplainer.text}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -48,11 +63,11 @@ export function ResultsPanel({
           </div>
         </CardHeader>
         <CardContent>
-          <ul className="list-disc space-y-1 pl-5 text-sm leading-relaxed">
-            {results.whyFits.slice(0, 4).map((b) => (
-              <li key={b}>{b}</li>
+          <div className="space-y-2 text-sm leading-relaxed">
+            {results.whyFits.map((b, idx) => (
+              <p key={idx}>{b}</p>
             ))}
-          </ul>
+          </div>
         </CardContent>
       </Card>
 

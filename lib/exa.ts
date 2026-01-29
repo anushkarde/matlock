@@ -15,6 +15,11 @@ type ExaSearchRequest = {
   includeDomains?: string[]
   excludeDomains?: string[]
   text?: boolean
+  highlights?: {
+    query?: string
+    numSentences?: number
+    highlightsPerUrl?: number
+  }
 }
 
 export type ExaSearchResult = {
@@ -23,6 +28,7 @@ export type ExaSearchResult = {
   title?: string
   text?: string
   score?: number
+  highlights?: string[]
 }
 
 type ExaSearchResponse = {
@@ -30,13 +36,14 @@ type ExaSearchResponse = {
 }
 
 type ExaContentsRequest =
-  | { ids: string[] }
-  | { urls: string[] }
+  | { ids: string[]; text?: boolean; highlights?: { query: string; numSentences?: number; highlightsPerUrl?: number } }
+  | { urls: string[]; text?: boolean; highlights?: { query: string; numSentences?: number; highlightsPerUrl?: number } }
 
 export type ExaContentItem = {
   id?: string
   url: string
   text?: string
+  highlights?: string[]
 }
 
 type ExaContentsResponse = {
@@ -80,13 +87,20 @@ async function exaFetch<T>(path: string, body: unknown): Promise<T | null> {
 export async function exaSearch(
   req: ExaSearchRequest
 ): Promise<ExaSearchResult[]> {
-  const data = await exaFetch<ExaSearchResponse>("/search", {
+  const body: Record<string, unknown> = {
     query: req.query,
     numResults: req.numResults ?? 10,
     includeDomains: req.includeDomains,
     excludeDomains: req.excludeDomains,
     text: req.text ?? true,
-  })
+  }
+
+  // Add highlights if provided (when text is false, highlights can be used instead)
+  if (req.highlights) {
+    body.highlights = req.highlights
+  }
+
+  const data = await exaFetch<ExaSearchResponse>("/search", body)
 
   return data?.results ?? []
 }
@@ -94,10 +108,19 @@ export async function exaSearch(
 export async function exaContents(
   req: ExaContentsRequest
 ): Promise<ExaContentItem[]> {
-  const payload =
-    "ids" in req
-      ? { ids: req.ids, text: true }
-      : { urls: req.urls, text: true }
+  const basePayload = "ids" in req
+    ? { ids: req.ids }
+    : { urls: req.urls }
+
+  const payload: Record<string, unknown> = {
+    ...basePayload,
+    text: req.text ?? true,
+  }
+
+  // Add highlights if provided
+  if (req.highlights) {
+    payload.highlights = req.highlights
+  }
 
   const data = await exaFetch<ExaContentsResponse>("/contents", payload)
   return data?.results ?? []
