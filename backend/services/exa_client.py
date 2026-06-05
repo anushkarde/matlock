@@ -1,9 +1,44 @@
 import os
 import httpx
+from datetime import datetime, timedelta
 from typing import Optional
 
 EXA_BASE = "https://api.exa.ai"
 _API_KEY = lambda: os.getenv("EXA_API_KEY", "")
+
+
+async def search_recent_cases(
+    rule: str,
+    fact_pattern: str,
+    days: int = 90,
+    num_results: int = 5,
+) -> list[dict]:
+    """Fetch opinions published within the last `days` days. Used alongside Pinecone."""
+    start_date = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%dT00:00:00.000Z")
+    query = f"court opinion Federal Rule of Evidence {rule}: {fact_pattern[:400]}"
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(
+            f"{EXA_BASE}/search",
+            headers={"x-api-key": _API_KEY()},
+            json={
+                "query": query,
+                "numResults": num_results,
+                "type": "neural",
+                "includeDomains": ["courtlistener.com"],
+                "startPublishedDate": start_date,
+                "contents": {
+                    "highlights": {
+                        "query": f"applying {rule} to facts, court reasoning and holding",
+                        "numSentences": 3,
+                        "highlightsPerUrl": 3,
+                    }
+                },
+            },
+        )
+        if resp.status_code != 200:
+            return []
+        return resp.json().get("results", [])
 
 
 async def search_cases(

@@ -68,7 +68,7 @@ async def ingest_rule(rule: str, num_results: int = 20) -> IngestResult:
 
     for result in results:
         url = result.get("url", "")
-        if not url or "/opinion/" not in url:
+        if not url or "courtlistener.com" not in url:
             failed += 1
             continue
 
