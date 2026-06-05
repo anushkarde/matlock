@@ -1,34 +1,75 @@
 export const runtime = "nodejs"
 
 import { NextResponse } from "next/server"
-import { runSearchPipeline } from "@/lib/searchPipeline"
-import type { SearchForm } from "@/lib/searchCases"
+import type { SearchForm, SearchResults, CaseResult, CaseSnippet } from "@/lib/searchCases"
+
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000"
+
+// Transform Python snake_case response into the TypeScript SearchResults shape
+// the frontend components already know how to render.
+function transformResponse(data: Record<string, unknown>): SearchResults {
+  const transformSnippet = (s: Record<string, unknown>): CaseSnippet => ({
+    label: (s.label as string) || "Relevant excerpt",
+    text: (s.text as string) || "",
+    highlight: (s.highlight as string | undefined) || (s.text as string) || undefined,
+  })
+
+  const transformCase = (c: Record<string, unknown>): CaseResult => ({
+    id: (c.id as string) || "unknown",
+    name: (c.name as string) || "Unknown",
+    courtLabel: (c.court_label as string) || "Federal",
+    year: (c.year as number) || new Date().getFullYear(),
+    authority: (c.authority as CaseResult["authority"]) || "persuasive",
+    issueTags: (c.issue_tags as string[]) || [],
+    url: (c.url as string | undefined) || undefined,
+    snippets: ((c.snippets as Record<string, unknown>[]) || []).map(transformSnippet),
+  })
+
+  const cases = ((data.cases as Record<string, unknown>[]) || []).map(transformCase)
+  const bestFitRaw = data.best_fit as Record<string, unknown> | null
+  const bestFit = bestFitRaw ? transformCase(bestFitRaw) : cases[0]
+
+  const whyFits = (data.why_fits as string[]) || []
+
+  const ruleExplainerRaw = data.rule_explainer as Record<string, unknown> | null
+  const ruleExplainer = ruleExplainerRaw
+    ? {
+        title: (ruleExplainerRaw.title as string) || "",
+        text: (ruleExplainerRaw.text as string) || "",
+      }
+    : undefined
+
+  return { bestFit, cases, whyFits, ruleExplainer }
+}
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as SearchForm
+    const form = (await request.json()) as SearchForm
 
-    // #region agent log -> debug stuff
-    fetch('http://127.0.0.1:7242/ingest/e39f9e2e-6124-4643-892e-c2aec1dcf2e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cases/search/route.ts:POST',message:'request received',data:{rule:body?.rule,courtId:body?.courtId,factLen:body?.factPattern?.length,preferBinding:body?.preferBinding,includePersuasive:body?.includePersuasive,onlyPublished:body?.onlyPublished,timeWindowYears:body?.timeWindowYears},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
+    const response = await fetch(`${BACKEND_URL}/search`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        rule: form.rule,
+        court_id: form.courtId || "any",
+        fact_pattern: form.factPattern,
+        prefer_binding: form.preferBinding,
+        include_persuasive: form.includePersuasive,
+        only_published: form.onlyPublished,
+        time_window_years: form.timeWindowYears,
+      }),
+    })
 
-    const result = await runSearchPipeline(body)
+    if (!response.ok) {
+      const text = await response.text()
+      console.error("[api/cases/search] backend error", response.status, text)
+      throw new Error(`Backend returned ${response.status}`)
+    }
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e39f9e2e-6124-4643-892e-c2aec1dcf2e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cases/search/route.ts:POST',message:'pipeline result',data:{hasBestFit:!!result?.bestFit,bestFitId:result?.bestFit?.id,casesCount:result?.cases?.length,whyFitsCount:result?.whyFits?.length,hasDebug:!!(result as any)?.debug},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
-
-    return NextResponse.json(result)
+    const data = (await response.json()) as Record<string, unknown>
+    return NextResponse.json(transformResponse(data))
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error("[api/cases/search] error", err)
-
-    return NextResponse.json(
-      {
-        error: "Search failed",
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Search failed" }, { status: 500 })
   }
 }
-
