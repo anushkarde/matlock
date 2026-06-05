@@ -1,6 +1,6 @@
 # Matlock — AI Legal Research for Evidence Motions
 
-Matlock is a legal research tool that helps litigators find the most relevant federal case law for evidence motions. Given a Federal Rule of Evidence (FRE) and a fact pattern, Matlock retrieves, semantically ranks, and summarizes the most analogous cases — including verbatim quotes from opinions — so attorneys can draft objections faster.
+Matlock is a legal research tool that helps litigators find the most relevant federal case law for evidence motions. Given a Federal Rule of Evidence (FRE) and a fact pattern, Matlock retrieves, semantically ranks, and summarizes the most analogous cases, including verbatim quotes from opinions, so attorneys can draft objections faster.
 
 ---
 
