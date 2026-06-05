@@ -60,7 +60,7 @@ User: FRE rule + fact pattern + circuit preference
 **What was tested:**
 - Ran 5 sample queries across different FRE rules (401, 403, 404(b), 702, 803) and manually verified that returned cases actually address those rules
 - Compared Pinecone-only results vs. hybrid (Pinecone + Exa) results: hybrid consistently surfaced more recent cases that would be missing from the pre-seeded index
-- Verified Claude's quote extraction against the raw case text to confirm verbatim accuracy — quotes were accurate when source text was available in the Exa highlights; paraphrasing occurred when only short excerpts were retrievable
+- Verified Claude's quote extraction against the raw case text to confirm verbatim accuracy. Quotes were accurate when source text was available in the Exa highlights; paraphrasing occurred when only short excerpts were retrievable
 
 **Known limitations:**
 - Only federal rules covered; state evidence codes are out of scope
@@ -140,7 +140,7 @@ Open [http://localhost:3000](http://localhost:3000).
 Pure vector search over a static Pinecone index would miss cases decided after ingestion. Pure live Exa search would be slower and miss cases whose full text isn't indexed by Exa. Hybrid combines a deep historical catalog with a live recency layer, merged and deduped before Claude ranking.
 
 **Why Claude for ranking instead of re-ranking embeddings?**
-Cosine similarity finds semantically close text but doesn't understand legal relevance — a case discussing FRE 403 in a footnote scores similarly to one where it's the holding. Claude can read the excerpts and distinguish. Structured JSON output also lets Claude return the exact quote labels and authority classifications the frontend needs in one pass.
+Cosine similarity finds semantically close text but doesn't understand legal relevance. A case discussing FRE 403 in a footnote scores similarly to one where it's the holding. Claude can read the excerpts and distinguish. Structured JSON output also lets Claude return the exact quote labels and authority classifications the frontend needs in one pass.
 
 **Chunking strategy:**
 Cases are split at 1200-character chunks with 150-character overlap, preferring sentence boundaries. This was chosen so each chunk fits comfortably in a prompt while preserving enough context for meaningful embedding. Smaller chunks (e.g. 400 chars) produced less coherent embeddings; larger chunks approached model context limits during ingestion batch embedding.
@@ -158,7 +158,7 @@ This project uses AI in two distinct ways:
 
 2. **As a development tool:** Claude Code (Anthropic's CLI) was used during development for debugging, refactoring, and writing portions of the backend routing logic.
 
-No generated text appears in the UI that is not sourced from actual court opinions — Claude's role is to select and surface quotes from real case text, not to generate legal analysis from scratch.
+No generated text appears in the UI that is not sourced from actual court opinions  Claude's role is to select and surface quotes from real case text, not to generate legal analysis from scratch.
 
 ---
 
