@@ -50,7 +50,7 @@ Return ONLY valid JSON — no markdown fences, no explanation before or after:
       ]
     }}
   ],
-  "rule_title": "FRE {rule_num} — {short_name}",
+  "rule_title": "FRE {rule_num} — {{short_name}}",
   "rule_summary": "One plain-English sentence describing what {rule} governs and when it applies."
 }}
 

@@ -292,13 +292,13 @@ export default function WriteupPage() {
             </Card>
 
             <Card className="p-6 sm:p-8">
-              <h2 className="text-2xl font-semibold mb-4">Why Exa, and Why This Market</h2>
+              <h2 className="text-2xl font-semibold mb-4">Why This Problem, and Why This Market</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p className="leading-relaxed">
                   The core signals here aren’t documents, but structure: semantic similarity between fact
                   patterns, recurring judicial reasoning, and the specific paragraphs courts rely on when
-                  applying evidentiary rules. Exa is uniquely positioned to capture these signals through
-                  semantic retrieval and content extraction across high-quality public legal corpora.
+                  applying evidentiary rules. Capturing these signals requires semantic retrieval and
+                  paragraph-level content extraction across high-quality public legal corpora.
                 </p>
 
                 <p className="leading-relaxed">
@@ -310,7 +310,7 @@ export default function WriteupPage() {
 
                 <div className="rounded-2xl border bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4 sm:p-6">
                   <p className="text-sm font-medium text-foreground">
-                    More broadly, this is a compelling market for Exa because:
+                    More broadly, this is a compelling problem to solve because:
                   </p>
                   <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed">
                     <li>the underlying corpus is public, open, and high-quality</li>
@@ -326,8 +326,9 @@ export default function WriteupPage() {
               <h2 className="text-2xl font-semibold mb-4">Implementation</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p className="leading-relaxed">
-                  I built Matlock as a thin pipeline on top of Exa’s <span className="font-medium text-foreground">/search</span>{" "}
-                  and <span className="font-medium text-foreground">/contents</span> APIs: search to find the right
+                  I built Matlock as a thin pipeline on top of a semantic{" "}
+                  <span className="font-medium text-foreground">search</span> and{" "}
+                  <span className="font-medium text-foreground">contents</span> layer: search to find the right
                   cases, then highlights to pull the exact paragraphs courts actually rely on.
                 </p>
                 <p className="leading-relaxed">
@@ -336,9 +337,9 @@ export default function WriteupPage() {
                   retrieval behave.
                 </p>
                 <p className="leading-relaxed">
-                  Longer term, this same setup could extend to Websets and firm-internal data, letting lawyers
-                  semantically search their own cached materials before trial, something Exa’s ZDR model makes
-                  especially compelling for sensitive legal data.
+                  Longer term, this same setup could extend to firm-internal data, letting lawyers
+                  semantically search their own cached materials before trial, with zero-data-retention
+                  handling that makes it safe for sensitive legal data.
                 </p>
               </div>
             </Card>
@@ -348,7 +349,7 @@ export default function WriteupPage() {
                 <span className="font-semibold text-primary">Matlock</span> doesn’t replace legal databases; it
                 compresses them into something usable. This is a domain where finding the{" "}
                 <span className="italic">right</span> paragraph matters more than finding every document, and
-                that’s exactly where Exa’s ground-up approach to search shines. If knowledge is power, then justice depends on the ability to surface and apply it precisely, transparently, and at the
+                that’s exactly where a ground-up approach to semantic search shines. If knowledge is power, then justice depends on the ability to surface and apply it precisely, transparently, and at the
                   moment it matters most.
               </p>
             </Card>
