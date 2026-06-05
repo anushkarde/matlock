@@ -39,7 +39,7 @@ export default function WriteupPage() {
                 </p>
                 
                 <p>
-                  The Federal Rules of Evidence are intentionally brief—runtime constraints on what a factfinder may hear. In practice, though, admissibility turns on how courts have applied those rules to concrete fact patterns: which details mattered, what reasoning controlled, and where the court said so. Fairness and efficiency hinge less on rule text than on judicial interpretation.
+                  The Federal Rules of Evidence are intentionally brief: runtime constraints on what a factfinder may hear. In practice, though, admissibility turns on how courts have applied those rules to concrete fact patterns: which details mattered, what reasoning controlled, and where the court said so. Fairness and efficiency hinge less on rule text than on judicial interpretation.
                 </p>
                 
                 <p>
@@ -47,7 +47,7 @@ export default function WriteupPage() {
                 </p>
 
                 <p>
-                  In an age of instant information, our justice system still runs on manual search and institutional memory. Matlock changes that—surfacing the reasoning courts actually rely on, and making justice verifiable, transparent, and accessible to all.
+                  In an age of instant information, our justice system still runs on manual search and institutional memory. Matlock changes that, surfacing the reasoning courts actually rely on, and making justice verifiable, transparent, and accessible to all.
                 </p>
               </div>
             </Card>
@@ -56,11 +56,11 @@ export default function WriteupPage() {
               <h2 className="text-2xl font-semibold mb-4">The Challenge</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p className="leading-relaxed">
-                  Litigation teams—associates, clerks, public defenders, and prosecutors—face a persistent last-mile research problem. FRE disputes hinge on how similar facts were treated in similar contexts, not on the rule text itself. Yet most legal research tools are database-driven: they return many documents, not the right paragraph.
+                  Litigation teams (associates, clerks, public defenders, and prosecutors) face a persistent last-mile research problem. FRE disputes hinge on how similar facts were treated in similar contexts, not on the rule text itself. Yet most legal research tools are database-driven: they return many documents, not the right paragraph.
                 </p>
 
                 <p className="leading-relaxed">
-                  Under real courtroom constraints—hearings, objections, motions in limine—lawyers need something much more precise: a short quote, a pin cite, and jurisdictionally relevant support they can stand behind. Instead, junior staff spend hours synthesizing cases that senior attorneys rarely have time to fully verify. The result is slower preparation, inconsistent arguments, and unnecessary cognitive load for disputes that recur across cases.
+                  Under real courtroom constraints (hearings, objections, motions in limine), lawyers need something much more precise: a short quote, a pin cite, and jurisdictionally relevant support they can stand behind. Instead, junior staff spend hours synthesizing cases that senior attorneys rarely have time to fully verify. The result is slower preparation, inconsistent arguments, and unnecessary cognitive load for disputes that recur across cases.
                 </p>
 
                 <div className="rounded-2xl border bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4 sm:p-6">
@@ -147,7 +147,7 @@ export default function WriteupPage() {
                 </div>
 
                 <p className="leading-relaxed">
-                  What litigators actually need is fact-pattern–driven retrieval, objection-ready outputs, and speed in live or near-live contexts. Incumbent products—Westlaw, LexisNexis, CourtListener—optimize for completeness and recall, not semantic similarity, excerpt extraction, or compression into a usable unit of argument.
+                  What litigators actually need is fact-pattern–driven retrieval, objection-ready outputs, and speed in live or near-live contexts. Incumbent products (Westlaw, LexisNexis, CourtListener) optimize for completeness and recall, not semantic similarity, excerpt extraction, or compression into a usable unit of argument.
                 </p>
               </div>
             </Card>
@@ -159,7 +159,7 @@ export default function WriteupPage() {
                   <p>
                     You give Matlock three inputs: a rule, a short fact pattern, and a jurisdiction. It returns
                     what matters: the exact quoted language a court relied on, with a pin cite, plus
-                    jurisdictionally relevant backup cases — all in one place.
+                    jurisdictionally relevant backup cases, all in one place.
                   </p>
                   <p>
                     The initial pilot scopes narrowly to 1–2 FRE rules (e.g. 403, 404(b), 901), drawing from
@@ -242,7 +242,7 @@ export default function WriteupPage() {
                       <div className="rounded-xl border bg-background/80 p-4 shadow-sm">
                         <p className="text-xs font-semibold text-primary">Incumbent research</p>
                         <p className="mt-2 text-sm leading-relaxed">
-                          Westlaw / Lexis optimize for completeness and recall — “show me everything,” then leave
+                          Westlaw / Lexis optimize for completeness and recall, “show me everything,” then leave
                           judgment to the lawyer.
                         </p>
                       </div>
@@ -271,7 +271,7 @@ export default function WriteupPage() {
                       <div className="mt-3 rounded-2xl border border-primary/40 bg-primary/10 p-4 shadow-sm">
                         <p className="text-xs font-semibold text-primary">Matlock</p>
                         <p className="mt-1 text-sm leading-relaxed text-foreground/80">
-                          Exact quotes, defensible citations, and transparent sourcing — powered by semantic
+                          Exact quotes, defensible citations, and transparent sourcing, powered by semantic
                           understanding of fact patterns <span className="text-muted-foreground">and</span>{" "}
                           rigorous legal citation discipline.
                         </p>
@@ -282,8 +282,8 @@ export default function WriteupPage() {
 
                   <div className="mt-4 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-3">
                     <p className="text-sm leading-relaxed text-primary">
-                      What legal users actually need—especially under time pressure—are exact quotes, defensible
-                      citations, and transparent sourcing. That middle layer is hard to build—but it’s exactly
+                      What legal users actually need, especially under time pressure, are exact quotes, defensible
+                      citations, and transparent sourcing. That middle layer is hard to build, but it’s exactly
                       where Matlock lives.
                     </p>
                   </div>
@@ -337,7 +337,7 @@ export default function WriteupPage() {
                 </p>
                 <p className="leading-relaxed">
                   Longer term, this same setup could extend to Websets and firm-internal data, letting lawyers
-                  semantically search their own cached materials before trial—something Exa’s ZDR model makes
+                  semantically search their own cached materials before trial, something Exa’s ZDR model makes
                   especially compelling for sensitive legal data.
                 </p>
               </div>
